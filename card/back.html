@@ -1,0 +1,14 @@
+<!-- card/back.html -->
+<link rel="stylesheet" href="/_addons/%%ADDON_ID%%/card/css.css">
+
+{{FrontSide}}
+<hr id="answer">
+<div class="odnd-info-wrap">
+  {{#Info}}
+    <div class="odnd-info-title">Zusatzinformationen</div>
+    <div class="odnd-info">{{Info}}</div>
+  {{/Info}}
+  {{^Info}}
+    <div class="odnd-info-muted">Keine Zusatzinformationen.</div>
+  {{/Info}}
+</div>

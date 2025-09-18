@@ -1,0 +1,97 @@
+/* card/css.css — Kartenlook mit Light/Dark-Mode (Dark = #2C2C2C) */
+
+/* ========== Light (Default) ========== */
+:root {
+  --od-bg: #ffffff;
+  --od-fg: #0f172a;
+  --od-muted: #64748b;
+  --od-border: #e5e7eb;
+  --od-card-shadow: 0 4px 16px rgba(0,0,0,0.05);
+
+  --btn-bg: #f8fafc;
+  --btn-border: #cbd5e1;
+  --btn-fg: #0f172a;
+
+  --accent: #2563eb;
+}
+
+/* ========== Dark via Anki night-mode (Anki-Standard: #2C2C2C) ========== */
+body.night-mode,
+.night-mode .card {
+  --od-bg: #2C2C2C;     /* gewünschter Dark-Background */
+  --od-fg: #f0f0f0;     /* helle Schrift */
+  --od-muted: #c9c9c9;  /* gedämpft */
+  --od-border: #3a3a3a; /* dezente Kante */
+  --od-card-shadow: 0 8px 24px rgba(0,0,0,0.35);
+
+  --btn-bg: #3a3a3a;
+  --btn-border: #4a4a4a;
+  --btn-fg: #f0f0f0;
+
+  --accent: #6ea8fe;
+}
+
+/* ========== Dark Fallback via prefers-color-scheme ========== */
+@media (prefers-color-scheme: dark) {
+  :root:not(.force-light) {
+    --od-bg: #2C2C2C;
+    --od-fg: #f0f0f0;
+    --od-muted: #c9c9c9;
+    --od-border: #3a3a3a;
+    --od-card-shadow: 0 8px 24px rgba(0,0,0,0.35);
+
+    --btn-bg: #3a3a3a;
+    --btn-border: #4a4a4a;
+    --btn-fg: #f0f0f0;
+
+    --accent: #6ea8fe;
+  }
+}
+
+/* ========== Kartenlayout ========== */
+.odnd-card {
+  background: var(--od-bg);
+  color: var(--od-fg);
+  border: 1px solid var(--od-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: var(--od-card-shadow);
+}
+
+.odnd-question {
+  font-weight: 700;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  margin-bottom: 0.75rem;
+}
+
+/* Controls */
+.odnd-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.odnd-btn {
+  color: var(--btn-fg);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  transition: transform .02s ease, background .12s ease, border-color .12s ease, filter .12s ease;
+}
+.odnd-btn:hover { filter: brightness(0.98); }
+.odnd-btn:active { transform: translateY(1px); }
+.odnd-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Answer separator */
+#answer {
+  border: 0;
+  border-top: 1px solid var(--od-border);
+  margin: 12px 0;
+}
+
+.odnd-info-wrap { margin-top: 8px; }
+.odnd-info-title { font-weight: 700; margin-bottom: 6px; }
+.odnd-info-muted { color: var(--od-muted); font-style: italic; }

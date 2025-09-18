@@ -1,0 +1,44 @@
+<!-- card/front.html -->
+<link rel="stylesheet" href="/_addons/%%ADDON_ID%%/card/css.css">
+
+<div class="odnd-card">
+  <div class="odnd-question">{{Question}}</div>
+
+  <!-- Daten-Container: jedes Item als eigenes <textarea> (behält Absätze) -->
+  <div id="odnd-data" data-max="%%MAX_ITEMS%%">
+    <!-- Items 1..20 -->
+    <textarea id="odnd-item1"  style="display:none">{{text:Item1}}</textarea>
+    <textarea id="odnd-item2"  style="display:none">{{text:Item2}}</textarea>
+    <textarea id="odnd-item3"  style="display:none">{{text:Item3}}</textarea>
+    <textarea id="odnd-item4"  style="display:none">{{text:Item4}}</textarea>
+    <textarea id="odnd-item5"  style="display:none">{{text:Item5}}</textarea>
+    <textarea id="odnd-item6"  style="display:none">{{text:Item6}}</textarea>
+    <textarea id="odnd-item7"  style="display:none">{{text:Item7}}</textarea>
+    <textarea id="odnd-item8"  style="display:none">{{text:Item8}}</textarea>
+    <textarea id="odnd-item9"  style="display:none">{{text:Item9}}</textarea>
+    <textarea id="odnd-item10" style="display:none">{{text:Item10}}</textarea>
+    <textarea id="odnd-item11" style="display:none">{{text:Item11}}</textarea>
+    <textarea id="odnd-item12" style="display:none">{{text:Item12}}</textarea>
+    <textarea id="odnd-item13" style="display:none">{{text:Item13}}</textarea>
+    <textarea id="odnd-item14" style="display:none">{{text:Item14}}</textarea>
+    <textarea id="odnd-item15" style="display:none">{{text:Item15}}</textarea>
+    <textarea id="odnd-item16" style="display:none">{{text:Item16}}</textarea>
+    <textarea id="odnd-item17" style="display:none">{{text:Item17}}</textarea>
+    <textarea id="odnd-item18" style="display:none">{{text:Item18}}</textarea>
+    <textarea id="odnd-item19" style="display:none">{{text:Item19}}</textarea>
+    <textarea id="odnd-item20" style="display:none">{{text:Item20}}</textarea>
+
+    <!-- AnswerKey separat -->
+    <textarea id="odnd-key" style="display:none">{{text:AnswerKey}}</textarea>
+  </div>
+
+  <div class="odnd-root"></div>
+
+  <div class="odnd-controls">
+    <button class="odnd-btn odnd-check">Prüfen</button>
+    <button class="odnd-btn odnd-show">Lösung zeigen</button>
+    <button class="odnd-btn odnd-reset">Neu mischen</button>
+  </div>
+
+  <div class="odnd-feedback" role="status" aria-live="polite"></div>
+</div>
