@@ -1,0 +1,14 @@
+.odnd-card { max-width: 900px; margin: 0 auto; text-align: left; }
+.odnd-question { font-weight: 600; margin-bottom: 0.75rem; }
+.odnd-list { list-style: none; padding: 0; margin: 0.5rem 0 1rem; }
+.odnd-item { padding: 0.5rem 0.75rem; border: 1px solid var(--night-mode-border, #ccc); border-radius: 8px; margin: 0.35rem 0; cursor: grab; }
+.odnd-item.dragging { opacity: 0.6; }
+.odnd-controls { display: flex; gap: 0.5rem; margin: 0.5rem 0; flex-wrap: wrap; }
+.odnd-btn { padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid #888; background: transparent; }
+.odnd-feedback { min-height: 1.4em; margin-top: 0.25rem; }
+.odnd-feedback.good { color: #1a7f37; }
+.odnd-feedback.bad { color: #c62828; }
+
+.odnd-info-wrap { margin-top: 1rem; }
+.odnd-info-title { font-weight: 600; margin-bottom: 0.25rem; }
+.odnd-info-muted { color: #888; font-style: italic; }
