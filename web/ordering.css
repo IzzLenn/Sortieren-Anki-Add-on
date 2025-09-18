@@ -1,14 +1,76 @@
-.odnd-card { max-width: 900px; margin: 0 auto; text-align: left; }
-.odnd-question { font-weight: 600; margin-bottom: 0.75rem; }
-.odnd-list { list-style: none; padding: 0; margin: 0.5rem 0 1rem; }
-.odnd-item { padding: 0.5rem 0.75rem; border: 1px solid var(--night-mode-border, #ccc); border-radius: 8px; margin: 0.35rem 0; cursor: grab; }
-.odnd-item.dragging { opacity: 0.6; }
-.odnd-controls { display: flex; gap: 0.5rem; margin: 0.5rem 0; flex-wrap: wrap; }
-.odnd-btn { padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid #888; background: transparent; }
-.odnd-feedback { min-height: 1.4em; margin-top: 0.25rem; }
-.odnd-feedback.good { color: #1a7f37; }
-.odnd-feedback.bad { color: #c62828; }
+/* web/ordering.css — Interaktionsliste mit Light/Dark (Dark = #2C2C2C) */
 
-.odnd-info-wrap { margin-top: 1rem; }
-.odnd-info-title { font-weight: 600; margin-bottom: 0.25rem; }
-.odnd-info-muted { color: #888; font-style: italic; }
+/* Light */
+:root {
+  --list-border: #d0d7de;
+  --item-bg: #ffffff;
+  --drag-shadow: 0 1px 0 rgba(0,0,0,0.05);
+  --good: #1a7f37;
+  --bad:  #c62828;
+  --text: #0f172a;
+}
+
+/* Dark via Anki night-mode */
+body.night-mode,
+.night-mode .card {
+  --list-border: #4a4a4a;
+  --item-bg: #3a3a3a; /* etwas heller als #2C2C2C für Kontrast */
+  --drag-shadow: 0 1px 0 rgba(0,0,0,0.45);
+  --good: #34d399;
+  --bad:  #ef4444;
+  --text: #f0f0f0;
+}
+
+/* Dark fallback */
+@media (prefers-color-scheme: dark) {
+  :root:not(.force-light) {
+    --list-border: #4a4a4a;
+    --item-bg: #3a3a3a;
+    --drag-shadow: 0 1px 0 rgba(0,0,0,0.45);
+    --good: #34d399;
+    --bad:  #ef4444;
+    --text: #f0f0f0;
+  }
+}
+
+.odnd-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 1.25rem;
+  color: var(--text);
+}
+
+.odnd-item {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--list-border);
+  border-radius: 10px;
+  margin: 0.4rem 0;
+  cursor: grab;
+  background: var(--item-bg);
+  box-shadow: var(--drag-shadow);
+  user-select: none;
+}
+
+/* Absatzabstand innerhalb der Kachel */
+.odnd-item p {
+  margin: 0 0 0.5em;  /* Abstand zwischen Absätzen */
+  line-height: 1.35;
+}
+.odnd-item p:last-child { margin-bottom: 0; }
+
+.odnd-feedback { min-height: 1.4em; margin-top: 0.35rem; color: var(--text); }
+.odnd-feedback.good { color: var(--good); }
+.odnd-feedback.bad  { color: var(--bad); }
+
+/* Auch in der Lösungsliste Absätze mit Abstand */
+.odnd-solution-list li p {
+  margin: 0 0 0.5em;
+  line-height: 1.35;
+}
+.odnd-solution-list li p:last-child { margin-bottom: 0; }
+
+/* Keyboard focus */
+.odnd-item:focus {
+  outline: 2px solid rgba(99,102,241,0.7);
+  outline-offset: 2px;
+}
