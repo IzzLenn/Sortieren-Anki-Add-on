@@ -1,12 +1,37 @@
-<!-- card/front.html -->
-<link rel="stylesheet" href="/_addons/%%ADDON_ID%%/card/css.css">
+<!-- Sortieren: FRONT (inline CSS+JS für iOS-kompatibel) -->
+<style>
+/* Touch-Drag Fallback */
+.odnd-placeholder {
+  height: 2.4em;
+  border: 2px dashed #60a5fa;
+  border-radius: 10px;
+  margin: .4rem 0;
+}
+.odnd-ghost {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  pointer-events: none;
+  opacity: .9;
+  transform: scale(1.01);
+  z-index: 9999;
+}
+/* Selektions-/Callout-Sperre auf der Karte */
+.odnd-card, .odnd-card * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;   /* kein Kopier-/Teilen-Callout */
+  -webkit-tap-highlight-color: transparent; /* kein blaues Highlight */
+}
+
+
+</style>
 
 <div class="odnd-card">
   <div class="odnd-question">{{Question}}</div>
 
-  <!-- Daten-Container: jedes Item als eigenes <textarea> (behält Absätze) -->
-  <div id="odnd-data" data-max="%%MAX_ITEMS%%">
-    <!-- Items 1..20 -->
+  <!-- MaxItems ist optional; wenn leer, nimmt das JS 10 -->
+  <div id="odnd-data" data-max="{{text:MaxItems}}">
     <textarea id="odnd-item1"  style="display:none">{{text:Item1}}</textarea>
     <textarea id="odnd-item2"  style="display:none">{{text:Item2}}</textarea>
     <textarea id="odnd-item3"  style="display:none">{{text:Item3}}</textarea>
@@ -27,11 +52,10 @@
     <textarea id="odnd-item18" style="display:none">{{text:Item18}}</textarea>
     <textarea id="odnd-item19" style="display:none">{{text:Item19}}</textarea>
     <textarea id="odnd-item20" style="display:none">{{text:Item20}}</textarea>
-
-    <!-- AnswerKey separat -->
-    <textarea id="odnd-key" style="display:none">{{text:AnswerKey}}</textarea>
+    <textarea id="odnd-key"     style="display:none">{{text:AnswerKey}}</textarea>
   </div>
 
+  <div class="odnd-hint" id="odnd-hint" style="display:none"></div>
   <div class="odnd-root"></div>
 
   <div class="odnd-controls">
@@ -42,3 +66,175 @@
 
   <div class="odnd-feedback" role="status" aria-live="polite"></div>
 </div>
+
+<script>
+(function(){
+  function $(s,r){return (r||document).querySelector(s)}
+  function $all(s,r){return Array.from((r||document).querySelectorAll(s))}
+  function norm(s){return (s||"").replace(/\r\n?/g,"\n").replace(/[\u2028\u2029]/g,"\n").replace(/\u00A0/g," ").trim()}
+  function read(id){var el=document.getElementById(id); if(!el) return ""; return norm(typeof el.value==="string"?el.value:el.textContent||"")}
+
+  var data = $("#odnd-data"); if(!data){return}
+  var max = parseInt(data.getAttribute("data-max")||"",10); if(!Number.isFinite(max)) max = 10; if(max<1) max=1; if(max>20) max=20;
+
+  var items=[]; var offenders=[];
+  for(var i=1;i<=20;i++){ var t=read("odnd-item"+i); if(t){items.push({t:t,idx:i-1}); if(/\n/.test(t)) offenders.push(i);} if(items.length>=max) break; }
+  var key = (read("odnd-key")||"").split(/[,;\s]+/).map(function(x){return parseInt(x,10)}).filter(function(n){return !isNaN(n)&&n>=1&&n<=items.length}).map(function(n){return n-1});
+
+  if(offenders.length){
+    var hint = $("#odnd-hint");
+    if(hint){
+      hint.style.display="";
+      hint.textContent = "Hinweis: Einige Antworten enthalten Absatzumbrüche. Bitte vermeide Absätze innerhalb eines Elements für eine konsistente Darstellung. Betroffen: " + offenders.map(function(n){return "Item"+n}).join(", ")+".";
+    }
+  }
+
+  var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints>0;
+
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=a[i];a[i]=a[j];a[j]=tmp;}return a}
+
+  function buildItem(text,index){
+    var li=document.createElement("li");
+    li.className="odnd-item";
+    li.draggable=!isTouch;
+    li.dataset.index=String(index);
+    li.textContent=text;
+
+    if(!isTouch){
+      li.addEventListener("dragstart",function(e){try{e.dataTransfer.setData("text/plain",li.dataset.index)}catch(_){ } li.classList.add("dragging")});
+      li.addEventListener("dragend",function(){li.classList.remove("dragging")});
+      li.addEventListener("dragover",function(e){e.preventDefault();var dragging=$(".odnd-item.dragging"); if(!dragging||dragging===li) return; var list=li.parentElement; var r=li.getBoundingClientRect(); var before=(e.clientY-r.top)<r.height/2; list.insertBefore(dragging, before?li:li.nextSibling);});
+    }
+    return li;
+  }
+
+  function render(){
+    var root=$(".odnd-root"); if(!root) return;
+    root.innerHTML="";
+    var ul=document.createElement("ul"); ul.className="odnd-list";
+    shuffle(items).forEach(function(o){ul.appendChild(buildItem(o.t,o.idx))});
+    root.appendChild(ul);
+
+    // ===== Touch-Drag Fallback (iOS) =====
+    if(isTouch){
+      var longPressMs = 180;
+      var pressTimer = null, dragging = null, ghost = null, placeholder = null, startY = 0, offsetY = 0;
+
+      function onTouchStart(e){
+        var t = e.target.closest(".odnd-item"); if(!t) return;
+					e.preventDefault(); // ⟵ verhindert iOS-Textauswahl/Callout
+        if(pressTimer) clearTimeout(pressTimer);
+        var touch = e.touches && e.touches[0] ? e.touches[0] : e;
+        startY = touch.clientY;
+        pressTimer = setTimeout(function(){
+          // start dragging
+          dragging = t;
+          dragging.classList.add("dragging");
+          var rect = dragging.getBoundingClientRect();
+          offsetY = startY - rect.top;
+
+          // placeholder
+          placeholder = document.createElement("div");
+          placeholder.className = "odnd-placeholder";
+          dragging.parentElement.insertBefore(placeholder, dragging.nextSibling);
+
+          // ghost copy
+          ghost = dragging.cloneNode(true);
+          ghost.classList.add("odnd-ghost");
+          ghost.style.top = (startY - offsetY) + "px";
+          ghost.style.width = rect.width + "px";
+          document.body.appendChild(ghost);
+
+          // hide original while dragging
+          dragging.style.visibility = "hidden";
+        }, longPressMs);
+      }
+
+      function moveGhost(clientY){
+        if(!ghost) return;
+        ghost.style.top = (clientY - offsetY) + "px";
+
+        // find insert position by midpoint comparison
+        var lis = Array.from(ul.children).filter(function(n){return n!==dragging && n!==placeholder});
+        for(var i=0;i<lis.length;i++){
+          var r = lis[i].getBoundingClientRect();
+          var before = clientY < (r.top + r.height/2);
+          if(before){
+            ul.insertBefore(placeholder, lis[i]);
+            return;
+          }
+        }
+        ul.appendChild(placeholder);
+      }
+
+      function onTouchMove(e){
+        if(pressTimer) { /* moving cancels longpress start */ clearTimeout(pressTimer); pressTimer=null; }
+        if(!dragging) return;
+        var touch = e.touches && e.touches[0] ? e.touches[0] : e;
+        moveGhost(touch.clientY);
+        e.preventDefault();
+      }
+
+      function endDrag(){
+        if(!dragging) return;
+        // insert original at placeholder
+        ul.insertBefore(dragging, placeholder);
+        dragging.style.visibility = "";
+        dragging.classList.remove("dragging");
+        dragging = null;
+        if(ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+        ghost = null;
+        if(placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+        placeholder = null;
+      }
+
+      function onTouchEnd(){
+        if(pressTimer){ clearTimeout(pressTimer); pressTimer=null; }
+        endDrag();
+      }
+
+			ul.addEventListener("touchstart", onTouchStart, {passive:false});
+			ul.addEventListener("touchmove",  onTouchMove,  {passive:false});
+			ul.addEventListener("touchend",   onTouchEnd,   {passive:true});
+			ul.addEventListener("touchcancel",onTouchEnd,   {passive:true});
+
+    }
+    // ===== Ende Touch-Drag =====
+
+    var feedback=$(".odnd-feedback");
+    function cur(){return $all(".odnd-item",ul).map(function(li){return parseInt(li.dataset.index,10)})}
+    function setFb(msg,good){ if(!feedback) return; feedback.textContent=msg||""; feedback.classList.remove("good","bad"); if(msg) feedback.classList.add(good?"good":"bad"); }
+
+    var checkBtn=$(".odnd-check"), showBtn=$(".odnd-show"), resetBtn=$(".odnd-reset");
+    var hasKey = key && key.length===items.length && key.every(function(k){return Number.isInteger(k)&&k>=0&&k<items.length});
+
+    if(checkBtn){
+      checkBtn.disabled=!hasKey;
+      checkBtn.onclick=function(){
+        if(!hasKey) return;
+        var ok = cur().every(function(v,i){return v===key[i]});
+        setFb(ok?"✅ Richtig!":"❌ Nicht ganz. ‚Lösung zeigen‘ hilft.", ok);
+      };
+    }
+    if(showBtn){
+      showBtn.disabled=!hasKey;
+      showBtn.onclick=function(){
+        if(!hasKey) return;
+        var map=new Map(); $all(".odnd-item",ul).forEach(function(li){map.set(parseInt(li.dataset.index,10),li)});
+        ul.innerHTML=""; key.forEach(function(idx){ul.appendChild(map.get(idx))});
+        setFb("👀 Lösung eingeblendet.", true);
+      };
+    }
+    if(resetBtn){
+      resetBtn.onclick=function(){
+        var nodes=$all(".odnd-item",ul).map(function(li){return {t:li.textContent,i:parseInt(li.dataset.index,10)}});
+        ul.innerHTML=""; shuffle(nodes).forEach(function(o){ul.appendChild(buildItem(o.t,o.i))});
+        setFb("",true);
+      };
+    }
+    if(!hasKey) setFb("ℹ️ Kein (gültiger) AnswerKey – Sortieren ohne Prüfung möglich.", true);
+  }
+
+  if(items.length){ render(); }
+})();
+</script>
