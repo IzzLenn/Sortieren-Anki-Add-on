@@ -1,14 +1,154 @@
-<!-- card/back.html -->
-<link rel="stylesheet" href="/_addons/%%ADDON_ID%%/card/css.css">
+<!-- Sortieren: BACK – zeigt alle Elemente in korrekter Reihenfolge -->
+
+<style>
+:root{
+  --od-bg:#fff;--od-fg:#0f172a;--od-border:#e5e7eb;--txt:#0f172a;
+}
+body.night-mode,.night-mode .card,:root.force-dark{
+  --od-bg:#2C2C2C;--od-fg:#f0f0f0;--od-border:#3a3a3a;--txt:#f0f0f0;
+}
+
+.odnd-back {
+  background: var(--od-bg);
+  color: var(--od-fg);
+  border: 1px solid var(--od-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.odnd-section-title {
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.odnd-solution-list {
+  margin: 8px 0 12px;
+  padding-left: 1.2em;
+}
+
+.odnd-note {
+  margin: 8px 0 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(2, 132, 199, 0.35); /* cyan-ish */
+  background: rgba(6, 182, 212, 0.12);
+  color: inherit;
+  font-size: 0.95em;
+}
+
+/* Absätze in Lösung lesbar machen */
+.odnd-solution-list li p { margin: 0 0 .5em; line-height: 1.35; }
+.odnd-solution-list li p:last-child { margin-bottom: 0; }
+
+#answer {
+  border: 0;
+  border-top: 1px solid var(--od-border);
+  margin: 12px 0;
+}
+</style>
 
 {{FrontSide}}
 <hr id="answer">
-<div class="odnd-info-wrap">
+
+<div class="odnd-back">
+  <div class="odnd-section-title">Korrekte Reihenfolge</div>
+  <ol class="odnd-solution-list" id="odnd-solution"></ol>
+  <div class="odnd-note" id="odnd-note" style="display:none"></div>
+
+  <div class="odnd-section-title" style="margin-top:12px">Zusatzinformationen</div>
   {{#Info}}
-    <div class="odnd-info-title">Zusatzinformationen</div>
     <div class="odnd-info">{{Info}}</div>
   {{/Info}}
   {{^Info}}
-    <div class="odnd-info-muted">Keine Zusatzinformationen.</div>
+    <div class="odnd-info" style="opacity:.75">Keine Zusatzinformationen.</div>
   {{/Info}}
 </div>
+
+<!-- Versteckte Datenquelle (gleich wie auf der Front) -->
+<div id="odnd-data" data-max="{{text:MaxItems}}" style="display:none">
+  <textarea id="odnd-item1">{{text:Item1}}</textarea>
+  <textarea id="odnd-item2">{{text:Item2}}</textarea>
+  <textarea id="odnd-item3">{{text:Item3}}</textarea>
+  <textarea id="odnd-item4">{{text:Item4}}</textarea>
+  <textarea id="odnd-item5">{{text:Item5}}</textarea>
+  <textarea id="odnd-item6">{{text:Item6}}</textarea>
+  <textarea id="odnd-item7">{{text:Item7}}</textarea>
+  <textarea id="odnd-item8">{{text:Item8}}</textarea>
+  <textarea id="odnd-item9">{{text:Item9}}</textarea>
+  <textarea id="odnd-item10">{{text:Item10}}</textarea>
+  <textarea id="odnd-item11">{{text:Item11}}</textarea>
+  <textarea id="odnd-item12">{{text:Item12}}</textarea>
+  <textarea id="odnd-item13">{{text:Item13}}</textarea>
+  <textarea id="odnd-item14">{{text:Item14}}</textarea>
+  <textarea id="odnd-item15">{{text:Item15}}</textarea>
+  <textarea id="odnd-item16">{{text:Item16}}</textarea>
+  <textarea id="odnd-item17">{{text:Item17}}</textarea>
+  <textarea id="odnd-item18">{{text:Item18}}</textarea>
+  <textarea id="odnd-item19">{{text:Item19}}</textarea>
+  <textarea id="odnd-item20">{{text:Item20}}</textarea>
+  <textarea id="odnd-key">{{text:AnswerKey}}</textarea>
+</div>
+
+<script>
+(function(){
+  function $(s,r){return (r||document).querySelector(s)}
+  function $all(s,r){return Array.from((r||document).querySelectorAll(s))}
+  function norm(s){return (s||"").replace(/\r\n?/g,"\n").replace(/[\u2028\u2029]/g,"\n").replace(/\u00A0/g," ").trim()}
+  function read(id){var el=document.getElementById(id); if(!el) return ""; return norm(typeof el.value==="string"?el.value:el.textContent||"")}
+  function escapeHtml(s){return (s||"").replace(/[&<>\"']/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]})}
+  function toHTML(text){
+    // Absätze sauber darstellen: \n\n => <p>…</p>, einfache \n => <br>
+    var safe = escapeHtml(text);
+    var parts = safe.split(/\n{2,}/).map(function(p){ return p.replace(/\n/g,"<br>") });
+    return "<p>" + parts.join("</p><p>") + "</p>";
+  }
+
+  var data = $("#odnd-data"); if(!data) return;
+  var max = parseInt(data.getAttribute("data-max")||"",10); if(!Number.isFinite(max)) max=10; if(max<1) max=1; if(max>20) max=20;
+
+  // Items einsammeln (in der Reihenfolge Item1..ItemN, bis max erreicht oder leer)
+  var items = [];
+  for(var i=1;i<=20;i++){
+    var t = read("odnd-item"+i);
+    if(t){ items.push({t:t, idx:i-1}); }
+    if(items.length>=max) break;
+  }
+
+  // Key parsen (1-basiert -> 0-basiert auf items)
+  var key = (read("odnd-key")||"")
+    .split(/[,;\s]+/)
+    .map(function(x){return parseInt(x,10)})
+    .filter(function(n){return !isNaN(n) && n>=1 && n<=items.length})
+    .map(function(n){return n-1});
+
+  var list = $("#odnd-solution");
+  var note = $("#odnd-note");
+  if(!list) return;
+
+  // Validierung: Key muss genau so lang sein wie aktive Items
+  var validKey = key.length === items.length;
+
+  // Reihenfolge bestimmen
+  var order = [];
+  if(validKey){
+    // Map von 0..items.length-1 auf die aktuelle items-Reihenfolge
+    // key[i] ist Index in items (0-basiert)
+    order = key.map(function(k){ return items[k]; });
+  } else {
+    // Fallback: natürliche Reihenfolge
+    order = items.slice();
+    if(note){
+      note.style.display = "";
+      note.textContent = "Hinweis: AnswerKey fehlt oder passt nicht zur Anzahl der Elemente – es wird die natürliche Reihenfolge (Item1…ItemN) angezeigt.";
+    }
+  }
+
+  // Rendern
+  list.innerHTML = "";
+  order.forEach(function(o){
+    var li = document.createElement("li");
+    li.innerHTML = toHTML(o.t);
+    list.appendChild(li);
+  });
+})();
+</script>
